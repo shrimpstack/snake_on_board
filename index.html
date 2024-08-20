@@ -41,22 +41,25 @@
         --deg: 0deg;
         transform: rotate(var(--deg));
       }
-      #棋盤 [type="食"]:after { background-image: url(./imgs/敏/食.png); }
-      #棋盤 [type="X"]:after { background-image: url(./imgs/敏/X.png); }
-      #棋盤 [type="頭"]:after { background-image: url(./imgs/敏/頭.png); }
-      #棋盤 [type="尾"]:after { background-image: url(./imgs/敏/尾.png); }
-      #棋盤 [type="直"]:after { background-image: url(./imgs/敏/直.png); }
-      #棋盤 [type="彎"]:after { background-image: url(./imgs/敏/彎.png); }
-      #棋盤 [val="1"]:after { --deg: 180deg; }
-      #棋盤 [val="2"]:after { --deg: -90deg; }
-      #棋盤 [val="3"]:after { --deg: 90deg; }
-      #棋盤 [val="23"]:after { --deg: 90deg; }
-      #棋盤 [val="03"]:after { --deg: 90deg; }
-      #棋盤 [val="13"]:after { --deg: 180deg; }
-      #棋盤 [val="12"]:after { --deg: -90deg; }
+      #棋盤 [type="X"]:after { background-image: var(--X); }
+      #棋盤 [type="食"]:after { background-image: var(--食); }
+      #棋盤 [type="頭"]:after { background-image: var(--頭); }
+      #棋盤 [type="尾"]:after { background-image: var(--尾); }
+      #棋盤 [type="直"]:after { background-image: var(--直); }
+      #棋盤 [type="彎"]:after { background-image: var(--彎); }
+      #選角色 {
+        position: absolute;
+        left: 50px;
+        top: 50px;
+      }
     </style>
   </head>
   <body>
+    <select id="選角色" onchange="換角色()">
+      <option value="敏">敏</option>
+      <option value="哈皮">哈皮</option>
+    </select>
+    <style id="造型css"></style>
     <div id="背景">
       <div id="棋盤"></div>
     </div>
@@ -73,6 +76,7 @@
 
       window.addEventListener('load', () => {
         生成所有格子();
+        換角色();
         初始化();
       });
 
@@ -93,6 +97,30 @@
           開始();
         }
       });
+  
+      function 換角色() {
+        if(!選角色.value) return;
+        造型css.innerHTML = "";
+        造型css.innerHTML += `
+          :root {
+            --X: url(./imgs/${選角色.value}/X.png);
+            --食: url(./imgs/${選角色.value}/食.png);
+            --頭: url(./imgs/${選角色.value}/頭.png);
+            --尾: url(./imgs/${選角色.value}/尾.png);
+            --直: url(./imgs/${選角色.value}/直.png);
+            --彎: url(./imgs/${選角色.value}/彎.png);
+          }`;
+        if(["敏"].includes(選角色.value)) {
+          造型css.innerHTML += `
+            #棋盤 [val="1"]:after { --deg: 180deg; }
+            #棋盤 [val="2"]:after { --deg: -90deg; }
+            #棋盤 [val="3"]:after { --deg: 90deg; }
+            #棋盤 [val="23"]:after { --deg: 90deg; }
+            #棋盤 [val="03"]:after { --deg: 90deg; }
+            #棋盤 [val="13"]:after { --deg: 180deg; }
+            #棋盤 [val="12"]:after { --deg: -90deg; }`;
+        }
+      }
       function 方向鍵觸發(key_code) {
         let 目標r = 0, 目標c = 0;
         switch(key_code) {
