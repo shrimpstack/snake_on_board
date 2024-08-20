@@ -77,12 +77,13 @@
       });
 
       window.addEventListener('keydown', event => {
+        方向鍵觸發(event.code);
         let 可走 = true;
         switch(event.code) {
-          case "ArrowUp": case "KeyW": 準備更改 = "U"; break;
-          case "ArrowLeft": case "KeyA": 準備更改 = "L"; break;
-          case "ArrowDown": case "KeyS": 準備更改 = "D"; break;
-          case "ArrowRight": case "KeyD": 準備更改 = "R"; break;
+          case "ArrowUp": case "KeyW":
+          case "ArrowLeft": case "KeyA":
+          case "ArrowDown": case "KeyS":
+          case "ArrowRight": case "KeyD":
           case "Enter": case "Space": break;
           default: 可走 = false; break;
         }
@@ -92,18 +93,21 @@
           開始();
         }
       });
-      function 更改方向() {
-        if(準備更改 == null) return;
+      function 方向鍵觸發(key_code) {
         let 目標r = 0, 目標c = 0;
-        switch(準備更改) {
-          case "U": 目標r = -1; break;
-          case "L": 目標c = -1; break;
-          case "D": 目標r = 1; break;
-          case "R": 目標c = 1; break;
-          default: 準備更改 = null; return;
+        switch(key_code) {
+          case "ArrowUp": case "KeyW": 目標r = -1; break;
+          case "ArrowLeft": case "KeyA": 目標c = -1; break;
+          case "ArrowDown": case "KeyS": 目標r = 1; break;
+          case "ArrowRight": case "KeyD": 目標c = 1; break;
+          default: return;
         }
         let [r, c] = 目前方向;
-        if(r != 目標r * -1 || c != 目標c * -1) 目前方向 = [目標r, 目標c];
+        if(r != 目標r * -1 || c != 目標c * -1) 準備更改 = [目標r, 目標c];
+      }
+      function 更改方向() {
+        if(準備更改 == null) return;
+        目前方向 = [...準備更改];
         準備更改 = null;
       }
 
