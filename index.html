@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>敏在幹嘛</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      body {
+        margin: 0;
+        display: grid;
+        width: 100%;
+        height: 100vh;
+        justify-content: center;
+        align-content: center;
+        overflow: hidden;
+      }
+      #背景 {
+        background: url(./imgs/背景.png) no-repeat;
+        width: 1324px;
+        height: 985px;
+        margin-left: -180px;
+        margin-top: -270px;
+      }
+      #棋盤 {
+        display: grid;
+        grid-template-columns: repeat(var(--cols), 24px);
+        grid-auto-rows: 24px;
+        width: max-content;
+        pointer-events: none;
+        margin-left: 513px;
+        margin-top: 456px;
+      }
+      #棋盤 div { position: relative; }
+      #棋盤 [type]:after {
+        content: "";
+        position: absolute;
+        top: -12px;
+        left: -12px;
+        width: 48px;
+        height: 48px;
+        --deg: 0deg;
+        transform: rotate(var(--deg));
+      }
+      #棋盤 [type="食"]:after { background-image: url(./imgs/敏/食.png); }
+      #棋盤 [type="X"]:after { background-image: url(./imgs/敏/X.png); }
+      #棋盤 [type="頭"]:after { background-image: url(./imgs/敏/頭.png); }
+      #棋盤 [type="尾"]:after { background-image: url(./imgs/敏/尾.png); }
+      #棋盤 [type="直"]:after { background-image: url(./imgs/敏/直.png); }
+      #棋盤 [type="彎"]:after { background-image: url(./imgs/敏/彎.png); }
+      #棋盤 [val="1"]:after { --deg: 180deg; }
+      #棋盤 [val="2"]:after { --deg: -90deg; }
+      #棋盤 [val="3"]:after { --deg: 90deg; }
+      #棋盤 [val="23"]:after { --deg: 90deg; }
+      #棋盤 [val="03"]:after { --deg: 90deg; }
+      #棋盤 [val="13"]:after { --deg: 180deg; }
+      #棋盤 [val="12"]:after { --deg: -90deg; }
+    </style>
+  </head>
+  <body>
+    <div id="背景">
+      <div id="棋盤"></div>
+    </div>
+    <script>
+      const 棋盤高 = 20;
+      const 棋盤寬 = 20;
+      const 蛇在哪 = [[1,1], [2, 1], [3, 1], [3, 2], [3, 3], [4, 3], [4, 2], [4, 1], [5, 1]];
+      const 格子們 = [];
+      let 食物位置 = [-1, -1];
+      let 存活 = true;
+      let 目前方向 = [0, 1];
+      let 準備更改 = null;
+      let 圖片路徑 = "./imgs/敏/";
+
+      window.addEventListener('load', () => {
+        生成所有格子();
+        初始化();
+      });
+
+      window.addEventListener('keydown', event => {
+        let 可走 = true;
+        switch(event.code) {
+          case "ArrowUp": case "KeyW": 準備更改 = "U"; break;
+          case "ArrowLeft": case "KeyA": 準備更改 = "L"; break;
+          case "ArrowDown": case "KeyS": 準備更改 = "D"; break;
+          case "ArrowRight": case "KeyD": 準備更改 = "R"; break;
+          case "Enter": case "Space": break;
+          default: 可走 = false; break;
+        }
+        if(可走 && 更新 == null) {
+          初始化();
+          生成食物();
+          開始();
+        }
+      });
+      function 更改方向() {
+        if(準備更改 == null) return;
+        let 目標r = 0, 目標c = 0;
+        switch(準備更改) {
+          case "U": 目標r = -1; break;
+          case "L": 目標c = -1; break;
+          case "D": 目標r = 1; break;
+          case "R": 目標c = 1; break;
+          default: 準備更改 = null; return;
+        }
+        let [r, c] = 目前方向;
+        if(r != 目標r * -1 || c != 目標c * -1) 目前方向 = [目標r, 目標c];
+        準備更改 = null;
+      }
+
+      let 更新 = null;
+      function 開始() {
+        移動();
+        clearInterval(更新);
+        更新 = setInterval(() => {
+          if(存活) 移動();
+          else 更新 = clearInterval(更新) || null;
+        }, 160);
+      }
+
+      function 初始化() {
+        let c = Math.round(棋盤寬 / 4) - 1;
+        let r = Math.round(棋盤高 / 2) - 1;
+        蛇在哪.splice(0, 蛇在哪.length);
+        蛇在哪.push([r, c], [r, c - 1], [r, c - 2]);
+        存活 = true;
+        目前方向 = [0, 1];
+        重新顯示所有格子();
+      }
+      function 移動() {
+        更改方向();
+        let [r, c] = 蛇在哪[0];
+        let [add_r, add_c] = 目前方向;
+        let new_r = r + add_r;
+        let new_c = c + add_c;
+        let 目標格判定 = 判定格子(new_r, new_c);
+        if(目標格判定 == "X" || 目標格判定 == "蛇") {
+          蛇在哪.pop();
+          if(目標格判定 == "蛇") 蛇在哪.unshift([new_r, new_c]);
+          存活 = false;
+        }
+        else if(目標格判定 == "食") {
+          蛇在哪.unshift([new_r, new_c]);
+          生成食物();
+        }
+        else {
+          蛇在哪.pop();
+          蛇在哪.unshift([new_r, new_c]);
+        }
+        重新顯示所有格子();
+      }
+      function 生成所有格子() {
+        棋盤.innerHTML = "";
+        棋盤.style.setProperty('--cols', 棋盤寬);
+        格子們.splice(0, 格子們.length);
+        for(let r = 0; r < 棋盤高; r++) {
+          格子們[r] = [];
+          for(let c = 0; c < 棋盤寬; c++) {
+            let 格子 = document.createElement('div');
+            格子.r = r;
+            格子.c = c;
+            棋盤.append(格子);
+            格子們[r][c] = 格子;
+          }
+        }
+      }
+      function 重新顯示所有格子() {
+        格子們.forEach(列 => 列.forEach(格 => {
+          格.removeAttribute('type');
+          格.removeAttribute('val');
+        }));
+        let [食r, 食c] = 食物位置;
+        if(食r != -1) 格子們[食r][食c].setAttribute('type', "食");
+        蛇在哪.forEach((這一格p, i) => {
+          let [r, c] = 這一格p;
+          if(i && 蛇在哪[0][0] == r && 蛇在哪[0][1] == c) return;
+          let 這一格 = 格子們[r][c];
+          let 上一格p = 蛇在哪[i - 1];
+          let 下一格p = 蛇在哪[i + 1];
+          let type = "", val = "";
+          if(!上一格p) type = 存活 ? "頭" : "X";
+          else if(!下一格p) {
+            type = "尾";
+            val = 取得方向(...這一格p, ...上一格p);
+          }
+          else {
+            let p_val = 取得方向(...這一格p, ...上一格p);
+            let n_val = 取得方向(...這一格p, ...下一格p);
+            if(Math.floor(p_val / 2) == Math.floor(n_val / 2)) type = "直";
+            else type = "彎";
+            val = [p_val, n_val].sort((a, b) => a - b).join('');
+          }
+          這一格.setAttribute('type', type);
+          if(val) 這一格.setAttribute('val', val);
+        });
+      }
+      function 取得方向(基準r, 基準c, 目標r, 目標c) {
+        let r差 = 1 + 目標r - 基準r;
+        let c差 = 1 + 目標c - 基準c;
+        return Math.floor(r差 / 2) + (r差 % 2 * 2) + Math.floor(c差 / 2);
+      }
+      function 生成食物() {
+        食物位置 = [-1, -1];
+        let 食r = Math.floor(Math.random() * 棋盤高);
+        let 食c = Math.floor(Math.random() * 棋盤寬);
+        while(判定格子(食r, 食c)) {
+          食r = Math.floor(Math.random() * 棋盤高);
+          食c = Math.floor(Math.random() * 棋盤寬);
+        }
+        食物位置 = [食r, 食c];
+      }
+      function 判定格子(r, c) {
+        let [食r, 食c] = 食物位置;
+        if(r == 食r && c == 食c) return "食";
+        else if(r == -1 || r == 棋盤高) return "X";
+        else if(c == -1 || c == 棋盤寬) return "X";
+        else {
+          let 蛇身 = 蛇在哪.find(([格r, 格c]) => 格r == r && 格c == c);
+          return !!蛇身 ? "蛇" : null;
+        }
+      }
+    </script>
+  </body>
+</html>
